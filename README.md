@@ -1,4 +1,4 @@
-This is the [assistant-ui](https://github.com/Yonom/assistant-ui) starter project trimmed down for offline testing.
+This is a custom AI chatbot demo application built with Next.js.
 
 ## Getting Started
 

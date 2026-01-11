@@ -194,7 +194,7 @@ export const Assistant = () => {
                   <BreadcrumbList>
                     <BreadcrumbItem>
                       <BreadcrumbPage className="line-clamp-1">
-                        Offline Chat Demo
+                        AI Chatbot
                       </BreadcrumbPage>
                     </BreadcrumbItem>
                   </BreadcrumbList>

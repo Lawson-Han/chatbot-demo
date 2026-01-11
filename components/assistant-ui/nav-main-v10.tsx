@@ -7,6 +7,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { CommandShortcut } from "@/components/ui/command";
 
 export function NavMain({
   items,
@@ -17,6 +18,7 @@ export function NavMain({
     url: string;
     icon: LucideIcon;
     isActive?: boolean;
+    shortcut?: string;
   }[];
   onItemClick?: (item: { title: string; url: string }) => void;
 }) {
@@ -38,6 +40,7 @@ export function NavMain({
             <a href={item.url} onClick={(e) => handleClick(e, item)}>
               <item.icon />
               <span>{item.title}</span>
+              {item.shortcut && <CommandShortcut>{item.shortcut}</CommandShortcut>}
             </a>
           </SidebarMenuButton>
         </SidebarMenuItem>

@@ -3,6 +3,7 @@
 import * as React from "react";
 import {
   Calendar,
+  Command,
   Home,
   Inbox,
   MessageCircleQuestion,
@@ -10,6 +11,7 @@ import {
   Search,
   Settings2,
   Sparkles,
+  SquarePen,
   Trash2,
 } from "lucide-react";
 
@@ -41,6 +43,7 @@ const data = {
       title: "Search",
       url: "#",
       icon: Search,
+      shortcut: "⌘K",
     },
     {
       title: "Ask AI",
@@ -81,10 +84,15 @@ const HomeButton: React.FC = () => {
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={true}>
+        <SidebarMenuButton size="lg" asChild>
           <a href="#">
-            <Home />
-            <span>Home</span>
+            <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+              <Command className="size-4" />
+            </div>
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-medium">Acme Inc</span>
+              <span className="truncate text-xs">Enterprise</span>
+            </div>
           </a>
         </SidebarMenuButton>
       </SidebarMenuItem>
@@ -98,7 +106,7 @@ const NewChatButton: React.FC = () => {
       <SidebarMenuItem>
         <SidebarMenuButton asChild>
           <a href="#">
-            <Plus />
+            <SquarePen />
             <span>New Chat</span>
           </a>
         </SidebarMenuButton>
