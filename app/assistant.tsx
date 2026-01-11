@@ -1,10 +1,10 @@
 "use client";
 
-import { AssistantRuntimeProvider } from "@assistant-ui/react";
 import {
-  useChatRuntime,
-  AssistantChatTransport,
-} from "@assistant-ui/react-ai-sdk";
+  AssistantRuntimeProvider,
+  type ChatModelAdapter,
+  useLocalRuntime,
+} from "@assistant-ui/react";
 import { Thread } from "@/components/assistant-ui/thread";
 import {
   SidebarInset,
@@ -16,18 +16,31 @@ import { Separator } from "@/components/ui/separator";
 import {
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
-  BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
+const OFFLINE_REPLY = `This starter now runs fully offline with a predictable, repeatable answer so you can focus on layout and interactions. Nothing is sent over the network and there are no API keys to manage.
+
+The response is intentionally verbose to stress-test scrolling, copy, and multi-paragraph rendering. Feel free to change this text to whatever long-form content you want to exercise the UI with.
+
+You can type anything below - every prompt returns this exact block. The goal is to keep the template lean while still giving you enough content to validate the chat experience end to end.`;
+
+const offlineAdapter: ChatModelAdapter = {
+  async run({ abortSignal }) {
+    if (abortSignal.aborted) {
+      return { status: { type: "incomplete", reason: "cancelled" } };
+    }
+
+    return {
+      content: [{ type: "text", text: OFFLINE_REPLY }],
+      status: { type: "complete", reason: "unknown" },
+    };
+  },
+};
+
 export const Assistant = () => {
-  const runtime = useChatRuntime({
-    transport: new AssistantChatTransport({
-      api: "/api/chat",
-    }),
-  });
+  const runtime = useLocalRuntime(offlineAdapter);
 
   return (
     <AssistantRuntimeProvider runtime={runtime}>
@@ -40,18 +53,8 @@ export const Assistant = () => {
               <Separator orientation="vertical" className="mr-2 h-4" />
               <Breadcrumb>
                 <BreadcrumbList>
-                  <BreadcrumbItem className="hidden md:block">
-                    <BreadcrumbLink
-                      href="https://www.assistant-ui.com/docs/getting-started"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Build Your Own ChatGPT UX
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator className="hidden md:block" />
                   <BreadcrumbItem>
-                    <BreadcrumbPage>Starter Template</BreadcrumbPage>
+                    <BreadcrumbPage>Offline Chat Demo</BreadcrumbPage>
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>
