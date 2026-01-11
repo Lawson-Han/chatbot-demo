@@ -124,7 +124,7 @@ const ThreadListItem: React.FC = () => {
             </SidebarMenuAction>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-56 rounded-lg"
+            className="w-40 rounded-lg"
             side={isMobile ? "bottom" : "right"}
             align={isMobile ? "end" : "start"}
           >
