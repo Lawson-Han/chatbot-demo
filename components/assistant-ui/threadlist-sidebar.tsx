@@ -20,6 +20,7 @@ import { NavMain } from "@/components/assistant-ui/nav-main-v10";
 import { NavSecondary } from "@/components/assistant-ui/nav-secondary";
 import { NavUser } from "@/components/assistant-ui/nav-user";
 import { SearchCommand } from "@/components/assistant-ui/search-command";
+import { ThreadListPrimitive } from "@assistant-ui/react";
 import {
   Sidebar,
   SidebarContent,
@@ -102,16 +103,18 @@ const HomeButton: React.FC = () => {
 
 const NewChatButton: React.FC = () => {
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <SidebarMenuButton asChild>
-          <a href="#">
-            <SquarePen />
-            <span>New Chat</span>
-          </a>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    </SidebarMenu>
+    <ThreadListPrimitive.New asChild>
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton asChild>
+            <a href="#">
+              <SquarePen />
+              <span>New Chat</span>
+            </a>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    </ThreadListPrimitive.New>
   );
 };
 
