@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import {
-  Calendar,
   Command,
   Home,
   Inbox,
@@ -10,7 +9,6 @@ import {
   Plus,
   Search,
   Settings2,
-  Sparkles,
   SquarePen,
   Trash2,
 } from "lucide-react";
@@ -21,6 +19,7 @@ import { NavSecondary } from "@/components/assistant-ui/nav-secondary";
 import { NavUser } from "@/components/assistant-ui/nav-user";
 import { SearchCommand } from "@/components/assistant-ui/search-command";
 import { ThreadListPrimitive } from "@assistant-ui/react";
+import { CommandShortcut } from "@/components/ui/command";
 import {
   Sidebar,
   SidebarContent,
@@ -47,22 +46,12 @@ const data = {
       shortcut: "⌘K",
     },
     {
-      title: "Ask AI",
-      url: "#",
-      icon: Sparkles,
-    },
-    {
       title: "Inbox",
       url: "#",
       icon: Inbox,
     },
   ],
   navSecondary: [
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
     {
       title: "Settings",
       url: "#",
@@ -102,14 +91,34 @@ const HomeButton: React.FC = () => {
 };
 
 const NewChatButton: React.FC = () => {
+  const newChatRef = React.useRef<HTMLAnchorElement>(null);
+
+  React.useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (
+        e.key === "o" &&
+        (e.metaKey || e.ctrlKey) &&
+        e.shiftKey &&
+        !e.repeat
+      ) {
+        e.preventDefault();
+        newChatRef.current?.click();
+      }
+    };
+
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+  }, []);
+
   return (
     <ThreadListPrimitive.New asChild>
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton asChild>
-            <a href="#">
+            <a ref={newChatRef} href="#">
               <SquarePen />
               <span>New Chat</span>
+              <CommandShortcut>⇧⌘O</CommandShortcut>
             </a>
           </SidebarMenuButton>
         </SidebarMenuItem>
