@@ -2,8 +2,10 @@
 
 import {
   ArchiveIcon,
+  Edit,
   MoreHorizontal,
   Plus,
+  Trash2,
 } from "lucide-react";
 
 import {
@@ -25,6 +27,7 @@ import {
   ThreadListItemPrimitive,
   ThreadListPrimitive,
   useAssistantState,
+  useThreadListItemRuntime,
 } from "@assistant-ui/react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -58,12 +61,15 @@ export function NavFavorites({ showNewButton = true }: { showNewButton?: boolean
 const ThreadListNew: React.FC = () => {
   return (
     <ThreadListPrimitive.New asChild>
-      <SidebarMenuItem>
-        <SidebarMenuButton asChild>
-          <a href="#">
+      <SidebarMenuItem className="group/item">
+        <SidebarMenuButton
+          asChild
+          className="group-data-[active=true]/item:bg-sidebar-accent group-data-[active=true]/item:text-sidebar-accent-foreground"
+        >
+          <button type="button" className="flex w-full items-center gap-2">
             <Plus />
             <span>New Thread</span>
-          </a>
+          </button>
         </SidebarMenuButton>
       </SidebarMenuItem>
     </ThreadListPrimitive.New>
@@ -86,17 +92,28 @@ const ThreadListSkeleton: React.FC = () => {
 
 const ThreadListItem: React.FC = () => {
   const { isMobile } = useSidebar();
+  const threadListItemRuntime = useThreadListItemRuntime();
+
+  const handleRename = async () => {
+    const newTitle = prompt("Enter new thread title:");
+    if (newTitle && newTitle.trim()) {
+      await threadListItemRuntime.rename(newTitle.trim());
+    }
+  };
 
   return (
     <ThreadListItemPrimitive.Root asChild>
-      <SidebarMenuItem>
+      <SidebarMenuItem className="group/item data-[active=true]:bg-sidebar-accent/30 data-[active=true]:text-sidebar-accent-foreground">
         <ThreadListItemPrimitive.Trigger asChild>
-          <SidebarMenuButton asChild>
-            <a href="#">
+          <SidebarMenuButton
+            asChild
+            className="group-data-[active=true]/item:bg-sidebar-accent group-data-[active=true]/item:text-sidebar-accent-foreground"
+          >
+            <button type="button" className="flex w-full items-center gap-2">
               <span>
                 <ThreadListItemPrimitive.Title fallback="New Chat" />
               </span>
-            </a>
+            </button>
           </SidebarMenuButton>
         </ThreadListItemPrimitive.Trigger>
         <DropdownMenu>
@@ -111,12 +128,22 @@ const ThreadListItem: React.FC = () => {
             side={isMobile ? "bottom" : "right"}
             align={isMobile ? "end" : "start"}
           >
+            <DropdownMenuItem onClick={handleRename}>
+              <Edit className="text-muted-foreground" />
+              <span>Rename</span>
+            </DropdownMenuItem>
             <ThreadListItemPrimitive.Archive asChild>
               <DropdownMenuItem>
                 <ArchiveIcon className="text-muted-foreground" />
                 <span>Archive</span>
               </DropdownMenuItem>
             </ThreadListItemPrimitive.Archive>
+            <ThreadListItemPrimitive.Delete asChild>
+              <DropdownMenuItem>
+                <Trash2 className="text-muted-foreground" />
+                <span>Delete</span>
+              </DropdownMenuItem>
+            </ThreadListItemPrimitive.Delete>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
