@@ -2,8 +2,8 @@
 
 import {
   ArchiveIcon,
-  Edit,
   MoreHorizontal,
+  PenLine,
   Plus,
   Trash2,
 } from "lucide-react";
@@ -129,7 +129,7 @@ const ThreadListItem: React.FC = () => {
             align={isMobile ? "end" : "start"}
           >
             <DropdownMenuItem onClick={handleRename}>
-              <Edit className="text-muted-foreground" />
+              <PenLine className="text-muted-foreground" />
               <span>Rename</span>
             </DropdownMenuItem>
             <ThreadListItemPrimitive.Archive asChild>
