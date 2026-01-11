@@ -139,8 +139,8 @@ const ThreadListItem: React.FC = () => {
               </DropdownMenuItem>
             </ThreadListItemPrimitive.Archive>
             <ThreadListItemPrimitive.Delete asChild>
-              <DropdownMenuItem>
-                <Trash2 className="text-muted-foreground" />
+              <DropdownMenuItem variant="destructive">
+                <Trash2 />
                 <span>Delete</span>
               </DropdownMenuItem>
             </ThreadListItemPrimitive.Delete>
