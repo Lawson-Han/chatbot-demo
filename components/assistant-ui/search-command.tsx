@@ -10,6 +10,7 @@ import {
 import {
   ThreadListPrimitive,
   ThreadListItemPrimitive,
+  useAssistantApi,
   useAssistantState,
 } from "@assistant-ui/react";
 
@@ -35,6 +36,10 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
     { title: "Help", icon: MessageCircleQuestion },
   ];
 
+  const handleThreadSelect = React.useCallback(() => {
+    onOpenChange(false);
+  }, [onOpenChange]);
+
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <CommandInput placeholder="Search..." />
@@ -53,14 +58,14 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
         </CommandGroup>
         <CommandSeparator />
         <CommandGroup heading="Threads">
-          <ThreadsContent />
+          <ThreadsContent onSelect={handleThreadSelect} />
         </CommandGroup>
       </CommandList>
     </CommandDialog>
   );
 }
 
-const ThreadsContent: React.FC = () => {
+const ThreadsContent: React.FC<{ onSelect: () => void }> = ({ onSelect }) => {
   const isLoading = useAssistantState(({ threads }) => threads.isLoading);
   const threadCount = useAssistantState(({ threads }) => threads.threadIds?.length ?? 0);
 
@@ -72,22 +77,34 @@ const ThreadsContent: React.FC = () => {
     );
   }
 
+  const ThreadItemComponent = React.useCallback(
+    () => <ThreadItem onSelect={onSelect} />,
+    [onSelect],
+  );
+
   return (
     <ThreadListPrimitive.Root>
-      <ThreadListPrimitive.Items components={{ ThreadListItem: ThreadItem }} />
+      <ThreadListPrimitive.Items
+        components={{ ThreadListItem: ThreadItemComponent }}
+      />
     </ThreadListPrimitive.Root>
   );
 };
 
-const ThreadItem: React.FC = () => {
+const ThreadItem: React.FC<{ onSelect: () => void }> = ({ onSelect }) => {
+  const api = useAssistantApi();
+
+  const handleSelect = React.useCallback(() => {
+    api.threadListItem().switchTo();
+    onSelect();
+  }, [api, onSelect]);
+
   return (
     <ThreadListItemPrimitive.Root asChild>
-      <ThreadListItemPrimitive.Trigger asChild>
-        <CommandItem>
-          <MessageSquare />
-          <ThreadListItemPrimitive.Title fallback="New Chat" />
-        </CommandItem>
-      </ThreadListItemPrimitive.Trigger>
+      <CommandItem onSelect={handleSelect}>
+        <MessageSquare />
+        <ThreadListItemPrimitive.Title fallback="New Chat" />
+      </CommandItem>
     </ThreadListItemPrimitive.Root>
   );
 };
