@@ -1,6 +1,6 @@
 "use client";
 
-import { PropsWithChildren, useEffect, useState, type FC } from "react";
+import { PropsWithChildren, useCallback, useEffect, useState, type FC } from "react";
 import Image from "next/image";
 import { XIcon, PlusIcon, FileText } from "lucide-react";
 import {
@@ -25,6 +25,8 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
 import { cn } from "@/lib/utils";
+import { isResourceFile, saveResourceFile } from "@/lib/resource-library";
+import { toast } from "sonner";
 
 const useFileSrc = (file: File | undefined) => {
   const [src, setSrc] = useState<string | undefined>(undefined);
@@ -218,18 +220,64 @@ export const ComposerAttachments: FC = () => {
 };
 
 export const ComposerAddAttachment: FC = () => {
+  const handleFiles = useCallback(async (files: FileList) => {
+    for (const file of Array.from(files)) {
+      const toastId = toast.loading("Uploading resource...");
+
+      if (!isResourceFile(file)) {
+        toast.error("Only plain text resources are supported.", { id: toastId });
+        continue;
+      }
+
+      try {
+        await saveResourceFile(file);
+        toast.success("Resource uploaded.", { id: toastId });
+      } catch {
+        toast.error("Resource upload failed.", { id: toastId });
+      }
+    }
+  }, []);
+
+  const handleClick = useCallback(() => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "text/plain";
+    input.multiple = true;
+    input.hidden = true;
+
+    const cleanup = () => {
+      input.remove();
+    };
+
+    input.addEventListener(
+      "change",
+      () => {
+        if (input.files?.length) {
+          void handleFiles(input.files);
+        }
+        cleanup();
+      },
+      { once: true },
+    );
+
+    input.addEventListener("cancel", cleanup, { once: true });
+
+    document.body.appendChild(input);
+    input.click();
+  }, [handleFiles]);
+
   return (
-    <ComposerPrimitive.AddAttachment asChild>
-      <TooltipIconButton
-        tooltip="Add Attachment"
-        side="bottom"
-        variant="ghost"
-        size="icon"
-        className="aui-composer-add-attachment size-[34px] rounded-full p-1 text-xs font-semibold hover:bg-muted-foreground/15 dark:border-muted-foreground/15 dark:hover:bg-muted-foreground/30"
-        aria-label="Add Attachment"
-      >
-        <PlusIcon className="aui-attachment-add-icon size-5 stroke-[1.5px]" />
-      </TooltipIconButton>
-    </ComposerPrimitive.AddAttachment>
+    <TooltipIconButton
+      tooltip="Add Attachment"
+      side="bottom"
+      variant="ghost"
+      size="icon"
+      className="aui-composer-add-attachment size-[34px] rounded-full p-1 text-xs font-semibold hover:bg-muted-foreground/15 dark:border-muted-foreground/15 dark:hover:bg-muted-foreground/30"
+      aria-label="Add Attachment"
+      onClick={handleClick}
+      type="button"
+    >
+      <PlusIcon className="aui-attachment-add-icon size-5 stroke-[1.5px]" />
+    </TooltipIconButton>
   );
 };

@@ -15,6 +15,7 @@ import {
 
 import { NavFavorites } from "@/components/assistant-ui/nav-favorites";
 import { NavMain } from "@/components/assistant-ui/nav-main-v10";
+import { ResourceLibrary } from "@/components/assistant-ui/resource-library";
 import { NavSecondary } from "@/components/assistant-ui/nav-secondary";
 import { NavUser } from "@/components/assistant-ui/nav-user";
 import { SearchCommand } from "@/components/assistant-ui/search-command";
@@ -161,6 +162,7 @@ export function ThreadListSidebar({
         </SidebarHeader>
         <SidebarContent>
           <NavFavorites showNewButton={false} />
+          <ResourceLibrary />
           <NavSecondary items={data.navSecondary} className="mt-auto" />
         </SidebarContent>
         <SidebarFooter>

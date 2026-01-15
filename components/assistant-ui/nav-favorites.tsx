@@ -34,6 +34,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function NavFavorites({ showNewButton = true }: { showNewButton?: boolean }) {
   const { isMobile } = useSidebar();
   const isLoading = useAssistantState(({ threads }) => threads.isLoading);
+  const threadCount = useAssistantState(
+    ({ threads }) => threads.threadIds?.length ?? 0,
+  );
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
@@ -43,15 +46,11 @@ export function NavFavorites({ showNewButton = true }: { showNewButton?: boolean
           {showNewButton && <ThreadListNew />}
           {isLoading ? (
             <ThreadListSkeleton />
-          ) : (
+          ) : threadCount ? (
             <ThreadListPrimitive.Items components={{ ThreadListItem }} />
+          ) : (
+            <ThreadListEmpty />
           )}
-          <SidebarMenuItem>
-            <SidebarMenuButton className="text-sidebar-foreground/70">
-              <MoreHorizontal />
-              <span>More</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
         </SidebarMenu>
       </ThreadListPrimitive.Root>
     </SidebarGroup>
@@ -87,6 +86,16 @@ const ThreadListSkeleton: React.FC = () => {
         </SidebarMenuItem>
       ))}
     </>
+  );
+};
+
+const ThreadListEmpty: React.FC = () => {
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton disabled className="text-sidebar-foreground/60">
+        <span>No threads yet</span>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   );
 };
 
