@@ -8,6 +8,10 @@ import {
   PencilIcon,
   RefreshCwIcon,
   Square,
+  CloudSunIcon,
+  CodeXmlIcon,
+  DatabaseIcon,
+  UtensilsIcon,
 } from "lucide-react";
 
 import {
@@ -114,27 +118,31 @@ const ThreadWelcome: FC = () => {
 
 const ThreadSuggestions: FC = () => {
   return (
-    <div className="aui-thread-welcome-suggestions grid w-full gap-2 pb-4 @md:grid-cols-2">
+    <div className="aui-thread-welcome-suggestions grid w-full gap-3 pb-8 @md:grid-cols-2">
       {[
         {
           title: "What's the weather",
           label: "in San Francisco?",
           action: "What's the weather in San Francisco?",
+          icon: CloudSunIcon,
         },
         {
           title: "Explain React hooks",
           label: "like useState and useEffect",
           action: "Explain React hooks like useState and useEffect",
+          icon: CodeXmlIcon,
         },
         {
           title: "Write a SQL query",
           label: "to find top customers",
           action: "Write a SQL query to find top customers",
+          icon: DatabaseIcon,
         },
         {
           title: "Create a meal plan",
           label: "for healthy weight loss",
           action: "Create a meal plan for healthy weight loss",
+          icon: UtensilsIcon,
         },
       ].map((suggestedAction, index) => (
         <m.div
@@ -151,16 +159,19 @@ const ThreadSuggestions: FC = () => {
             asChild
           >
             <Button
-              variant="ghost"
-              className="aui-thread-welcome-suggestion h-auto w-full flex-1 flex-wrap items-start justify-start gap-1 rounded-3xl border px-5 py-4 text-left text-sm @md:flex-col dark:hover:bg-accent/60"
+              variant="outline"
+              className="aui-thread-welcome-suggestion flex h-auto w-full flex-col items-start justify-start gap-2 rounded-xl border bg-background p-4 text-left transition-colors hover:bg-muted/50"
               aria-label={suggestedAction.action}
             >
-              <span className="aui-thread-welcome-suggestion-text-1 font-medium">
-                {suggestedAction.title}
-              </span>
-              <span className="aui-thread-welcome-suggestion-text-2 text-muted-foreground">
-                {suggestedAction.label}
-              </span>
+              <suggestedAction.icon className="size-4 text-muted-foreground" />
+              <div className="flex flex-col gap-0.5">
+                <span className="aui-thread-welcome-suggestion-text-1 text-sm font-medium">
+                  {suggestedAction.title}
+                </span>
+                <span className="aui-thread-welcome-suggestion-text-2 text-xs text-muted-foreground">
+                  {suggestedAction.label}
+                </span>
+              </div>
             </Button>
           </ThreadPrimitive.Suggestion>
         </m.div>
