@@ -25,7 +25,7 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
 import { cn } from "@/lib/utils";
-import { isResourceFile, saveResourceFile } from "@/lib/resource-library";
+import { validateResourceFile, saveResourceFile } from "@/lib/resource-library";
 import { toast } from "sonner";
 
 const useFileSrc = (file: File | undefined) => {
@@ -159,7 +159,7 @@ const AttachmentUI: FC = () => {
         className={cn(
           "aui-attachment-root relative",
           isImage &&
-            "aui-attachment-root-composer only:[&>#attachment-tile]:size-24",
+          "aui-attachment-root-composer only:[&>#attachment-tile]:size-24",
         )}
       >
         <AttachmentPreviewDialog>
@@ -168,7 +168,7 @@ const AttachmentUI: FC = () => {
               className={cn(
                 "aui-attachment-tile size-14 cursor-pointer overflow-hidden rounded-[14px] border bg-muted transition-opacity hover:opacity-75",
                 isComposer &&
-                  "aui-attachment-tile-composer border-foreground/20",
+                "aui-attachment-tile-composer border-foreground/20",
               )}
               role="button"
               id="attachment-tile"
@@ -224,8 +224,9 @@ export const ComposerAddAttachment: FC = () => {
     for (const file of Array.from(files)) {
       const toastId = toast.loading("Uploading resource...");
 
-      if (!isResourceFile(file)) {
-        toast.error("Only plain text resources are supported.", { id: toastId });
+      const validation = validateResourceFile(file);
+      if (!validation.valid) {
+        toast.error(validation.error, { id: toastId });
         continue;
       }
 

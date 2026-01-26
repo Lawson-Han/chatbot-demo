@@ -103,12 +103,25 @@ const ResourceLibraryItem = ({
     }
   };
 
+  // Calculate progress percentage
+  const progressPercent =
+    resource.segmentCount > 0
+      ? Math.round((resource.readingPosition / resource.segmentCount) * 100)
+      : 0;
+
   return (
     <SidebarMenuItem className="group/item">
       <SidebarMenuButton asChild>
         <button type="button" className="flex w-full items-center gap-2">
           <FileText className="size-4 text-muted-foreground" />
-          <span className="truncate">{resource.name}</span>
+          <div className="flex flex-1 flex-col items-start overflow-hidden">
+            <span className="truncate w-full text-left">{resource.name}</span>
+            {resource.segmentCount > 0 && (
+              <span className="text-xs text-muted-foreground">
+                {resource.readingPosition} / {resource.segmentCount} ({progressPercent}%)
+              </span>
+            )}
+          </div>
         </button>
       </SidebarMenuButton>
       <DropdownMenu>

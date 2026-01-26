@@ -6,18 +6,29 @@ export type ResourceRecord = {
   archivedAt?: number | null;
   content: string;
   segments?: string[];
+  readingPosition?: number; // Current segment index (0-based)
 };
 
 export type ResourceSummary = Pick<
   ResourceRecord,
   "id" | "name" | "size" | "createdAt"
->;
+> & {
+  segmentCount: number;
+  readingPosition: number;
+};
 
 const DB_NAME = "resource-library";
 const STORE_NAME = "resources";
 const DB_VERSION = 1;
 const LIBRARY_EVENT = "resource-library-updated";
 const PLAIN_TEXT_EXTENSION = ".txt";
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+const SEGMENT_SIZE = 10000; // 10000 characters per segment
+
+export const RESOURCE_CONFIG = {
+  maxFileSizeBytes: MAX_FILE_SIZE_BYTES,
+  segmentSize: SEGMENT_SIZE,
+} as const;
 
 const canUseIndexedDb = () =>
   typeof window !== "undefined" && "indexedDB" in window;
@@ -89,8 +100,74 @@ export const isResourceFile = (file: File) => {
   return name.endsWith(PLAIN_TEXT_EXTENSION);
 };
 
+export const validateResourceFile = (
+  file: File
+): { valid: boolean; error?: string } => {
+  if (!isResourceFile(file)) {
+    return { valid: false, error: "Only plain text resources are supported." };
+  }
+  if (file.size > MAX_FILE_SIZE_BYTES) {
+    const maxSizeMB = MAX_FILE_SIZE_BYTES / 1024 / 1024;
+    return {
+      valid: false,
+      error: `File size exceeds limit (max ${maxSizeMB}MB).`,
+    };
+  }
+  return { valid: true };
+};
+
+/**
+ * Asynchronously segment content into chunks of specified size.
+ * Uses setTimeout batching to avoid blocking the main thread for large files.
+ */
+export const segmentContent = async (
+  content: string,
+  segmentSize: number = SEGMENT_SIZE
+): Promise<string[]> => {
+  const segments: string[] = [];
+  const totalLength = content.length;
+
+  // For small content, process synchronously
+  if (totalLength <= segmentSize * 10) {
+    let position = 0;
+    while (position < totalLength) {
+      segments.push(content.slice(position, position + segmentSize));
+      position += segmentSize;
+    }
+    return segments;
+  }
+
+  // For larger content, use batched async processing
+  return new Promise((resolve) => {
+    let position = 0;
+    const batchSize = segmentSize * 100; // Process 100 segments per batch
+
+    const processBatch = () => {
+      const batchEnd = Math.min(position + batchSize, totalLength);
+
+      while (position < batchEnd) {
+        segments.push(content.slice(position, position + segmentSize));
+        position += segmentSize;
+      }
+
+      if (position < totalLength) {
+        // Yield to main thread between batches
+        setTimeout(processBatch, 0);
+      } else {
+        resolve(segments);
+      }
+    };
+
+    processBatch();
+  });
+};
+
 export const saveResourceFile = async (file: File) => {
   const content = await file.text();
+
+  // Async segmentation to avoid blocking UI
+  const segments = await segmentContent(content);
+
   const record: ResourceRecord = {
     id: createResourceId(),
     name: normalizeResourceName(file.name),
@@ -98,7 +175,7 @@ export const saveResourceFile = async (file: File) => {
     createdAt: Date.now(),
     archivedAt: null,
     content,
-    segments: [],
+    segments,
   };
 
   const db = await openResourceDb();
@@ -121,11 +198,13 @@ export const listResources = async (): Promise<ResourceSummary[]> => {
 
   return records
     .filter((record) => !record.archivedAt)
-    .map(({ id, name, size, createdAt }) => ({
+    .map(({ id, name, size, createdAt, segments, readingPosition }) => ({
       id,
       name,
       size,
       createdAt,
+      segmentCount: segments?.length ?? 0,
+      readingPosition: readingPosition ?? 0,
     }))
     .sort((a, b) => b.createdAt - a.createdAt);
 };
@@ -183,6 +262,92 @@ export const archiveResource = async (resourceId: string) => {
   }
 
   record.archivedAt = Date.now();
+  await requestToPromise(store.put(record));
+  await txDone(tx);
+  notifyLibraryUpdate();
+};
+
+export const getResource = async (
+  resourceId: string
+): Promise<ResourceRecord | null> => {
+  const db = await openResourceDb();
+  const tx = db.transaction(STORE_NAME, "readonly");
+  const store = tx.objectStore(STORE_NAME);
+  const record = await requestToPromise<ResourceRecord | undefined>(
+    store.get(resourceId)
+  );
+  await txDone(tx);
+  return record ?? null;
+};
+
+export type SegmentResult = {
+  segment: string;
+  position: number;
+  totalSegments: number;
+  hasMore: boolean;
+};
+
+/**
+ * Get the next unread segment from a resource.
+ * Automatically advances reading position.
+ */
+export const getNextSegment = async (
+  resourceId: string
+): Promise<SegmentResult | null> => {
+  const db = await openResourceDb();
+  const tx = db.transaction(STORE_NAME, "readwrite");
+  const store = tx.objectStore(STORE_NAME);
+  const record = await requestToPromise<ResourceRecord | undefined>(
+    store.get(resourceId)
+  );
+
+  if (!record || !record.segments?.length) {
+    await txDone(tx);
+    return null;
+  }
+
+  const currentPosition = record.readingPosition ?? 0;
+  const totalSegments = record.segments.length;
+
+  if (currentPosition >= totalSegments) {
+    await txDone(tx);
+    return null; // Already finished reading
+  }
+
+  const segment = record.segments[currentPosition];
+  const newPosition = currentPosition + 1;
+
+  // Update reading position
+  record.readingPosition = newPosition;
+  await requestToPromise(store.put(record));
+  await txDone(tx);
+  notifyLibraryUpdate();
+
+  return {
+    segment,
+    position: currentPosition,
+    totalSegments,
+    hasMore: newPosition < totalSegments,
+  };
+};
+
+/**
+ * Reset reading position to beginning.
+ */
+export const resetReadingPosition = async (resourceId: string) => {
+  const db = await openResourceDb();
+  const tx = db.transaction(STORE_NAME, "readwrite");
+  const store = tx.objectStore(STORE_NAME);
+  const record = await requestToPromise<ResourceRecord | undefined>(
+    store.get(resourceId)
+  );
+
+  if (!record) {
+    await txDone(tx);
+    throw new Error("Resource not found.");
+  }
+
+  record.readingPosition = 0;
   await requestToPromise(store.put(record));
   await txDone(tx);
   notifyLibraryUpdate();
