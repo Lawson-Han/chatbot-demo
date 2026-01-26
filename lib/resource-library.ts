@@ -23,7 +23,7 @@ const DB_VERSION = 1;
 const LIBRARY_EVENT = "resource-library-updated";
 const PLAIN_TEXT_EXTENSION = ".txt";
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
-const SEGMENT_SIZE = 10000; // 10000 characters per segment
+const SEGMENT_SIZE = 5000; // 5000 characters per segment
 
 export const RESOURCE_CONFIG = {
   maxFileSizeBytes: MAX_FILE_SIZE_BYTES,
@@ -163,7 +163,23 @@ export const segmentContent = async (
 };
 
 export const saveResourceFile = async (file: File) => {
-  const content = await file.text();
+  let content: string;
+  try {
+    const buffer = await file.arrayBuffer();
+    // Try UTF-8 first with fatal error to detect encoding issues
+    const decoder = new TextDecoder("utf-8", { fatal: true });
+    content = decoder.decode(buffer);
+  } catch (e) {
+    // Fallback to GB18030 (superset of GBK) for Chinese content
+    try {
+      const buffer = await file.arrayBuffer();
+      const decoder = new TextDecoder("gb18030", { fatal: true });
+      content = decoder.decode(buffer);
+    } catch (e2) {
+      // Final fallback to default text decoding (might contain replacement chars)
+      content = await file.text();
+    }
+  }
 
   // Async segmentation to avoid blocking UI
   const segments = await segmentContent(content);
